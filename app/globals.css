@@ -1,26 +1,141 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg: oklch(0.15 0.016 260);
+  --bg-translucent: oklch(0.15 0.016 260 / 0.7);
+  --panel: oklch(0.19 0.018 260);
+  --panel-dark: oklch(0.12 0.014 260);
+  --panel-accent: oklch(0.21 0.03 280);
+  --overlay: oklch(0.1 0.01 260 / 0.6);
+
+  /* Text ramp. Every step clears WCAG AA (4.5:1) against --bg, --panel and
+     --panel-dark, so any of them is safe on any surface. Ratios vs --bg:
+     fg 18.0 · soft 12.5 · muted 8.8 · dim 6.1 · faint 5.0 */
+  --fg: oklch(0.97 0.006 260);
+  --fg-soft: oklch(0.85 0.006 260);
+  --fg-muted: oklch(0.75 0.01 260);
+  --fg-dim: oklch(0.65 0.01 260);
+  --fg-faint: oklch(0.6 0.01 260);
+
+  /* Accent */
+  --accent: oklch(0.72 0.19 280);
+  --accent-light: oklch(0.8 0.14 280);
+  --accent-alt: oklch(0.78 0.14 250);
+  --accent-glow: oklch(0.72 0.19 280 / 0.45);
+  --accent-soft: oklch(0.72 0.19 280 / 0.15);
+  --ink: oklch(0.12 0.01 260);
+
+  /* Decorative hero wash */
+  --aurora-a: oklch(0.55 0.22 290 / 0.35);
+  --aurora-b: oklch(0.72 0.19 280 / 0.3);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-dark: var(--panel-dark);
+  --color-panel-accent: var(--panel-accent);
+  --color-fg: var(--fg);
+  --color-fg-soft: var(--fg-soft);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-ink: var(--ink);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes auroraA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.15); }
+}
+@keyframes auroraB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 30px) scale(1.1); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes modalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalPop {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Keep anchor targets clear of the sticky nav. */
+  scroll-padding-top: 72px;
+  /* Stop iOS Safari inflating text in landscape. */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-light);
+}
+
+button {
+  cursor: pointer;
+}
+
+/* One visible focus ring for keyboard users everywhere. Unlayered, so it wins
+   over Tailwind's `outline-none` utility on the form fields. */
+:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  /* Reveal starts at inline opacity:0 and animates in. With transitions off it
+     would never become visible, so show it outright. */
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

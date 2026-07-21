@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Elvoro
 
-## Getting Started
+A marketing landing page for a fictional agentic-marketing SaaS, built from a
+static design mockup. Next.js App Router, TypeScript, Tailwind CSS v4.
 
-First, run the development server:
+**Elvoro is not a real company.** The product, pricing, and customer names are
+invented; this repo is a front-end build, not a working service.
+
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+pnpm lint           # ESLint (flat config, next/core-web-vitals + TS)
+pnpm typecheck      # tsc --noEmit
+pnpm build          # production build — all routes prerender statically
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+CI runs all three on every push and pull request.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure
 
-## Learn More
+```
+app/
+  layout.tsx              root layout — fonts, metadata, site chrome
+  page.tsx                landing page sections
+  docs|privacy|terms/     secondary pages
+  not-found.tsx           custom 404
+  globals.css             design tokens, keyframes, base styles
+  components/
+    SiteNav.tsx           sticky header + mobile drawer
+    SiteFooter.tsx
+    DemoModalProvider.tsx modal state (context) + mount point
+    DemoModal.tsx         the dialog itself
+    DemoButton.tsx        any CTA that opens the dialog
+    Faq.tsx               accordion
+    Reveal.tsx            scroll-triggered fade-up
+    ContentPage.tsx       shell for the secondary pages
+```
 
-To learn more about Next.js, take a look at the following resources:
+Site chrome lives in `layout.tsx`, so `page.tsx` and every secondary page render
+only their own content and inherit the nav, footer, and modal.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes on the implementation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Design tokens.** Colors are defined once in `globals.css` as CSS custom
+properties and exposed to Tailwind through `@theme inline`, so components use
+`text-fg-muted` rather than raw color values. The text ramp has five steps
+(`fg` → `fg-soft` → `fg-muted` → `fg-dim` → `fg-faint`); every step clears WCAG
+AA contrast against all three surface colors, so any of them is safe anywhere.
 
-## Deploy on Vercel
+**Responsive.** Mobile-first, breaking at `sm` (640px) and `md` (768px). The nav
+collapses to a drawer below `md`; the three-column grids stack; section rhythm
+and type scale down. Form inputs are 16px on mobile because anything smaller
+makes iOS Safari zoom on focus.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Accessibility.** Landmarks (`header` / `nav` / `main` / `section` /
+`footer`) with `aria-labelledby` on each section. The demo dialog traps focus,
+restores it to the trigger on close, closes on Escape or backdrop click, and is
+labelled by its heading. The FAQ accordion wires `aria-expanded` /
+`aria-controls` and marks collapsed panels `inert` so screen readers skip them.
+CTAs that open the dialog are `<button>`, not `<a>`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Motion.** `Reveal` fades sections in via `IntersectionObserver`. Because its
+resting state is `opacity: 0`, two `!important` rules guarantee content is never
+stranded: a `prefers-reduced-motion` rule in `globals.css`, and a `<noscript>`
+rule in the root layout.
+
+## Known scope limits
+
+- The demo form is client-only — it validates and shows a success state, but
+  posts nowhere. There is no backend, database, or analytics.
+- `/docs`, `/privacy`, and `/terms` are honest placeholders, not real policies.
+- No test suite. For a static marketing page I'd reach for Playwright over unit
+  tests, covering the dialog's focus behaviour and the mobile nav.
